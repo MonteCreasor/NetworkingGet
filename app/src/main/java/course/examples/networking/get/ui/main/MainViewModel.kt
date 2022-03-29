@@ -68,8 +68,7 @@ class MainViewModel : ViewModel() {
 
     /**
      * Suspending helper function that performs the network request
-     * specified by the passed [url] and then posts the JSON String
-     * result to the LiveData feed that is observed by the Fragment.
+     * specified by the passed [url] and returns the raw JSON result.
      */
     private suspend fun makeNetworkCall(url: String): String =
         withContext(Dispatchers.IO) {
