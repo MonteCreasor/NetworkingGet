@@ -9,6 +9,7 @@ import com.google.gson.JsonParser
 import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -24,6 +25,8 @@ class MainViewModel : ViewModel() {
     /** GSon instance used to make JSON string more readable. */
     val gson = GsonBuilder().setPrettyPrinting().create()
 
+    /** Keep track of coroutine so that duplicate requests are ignored. */
+    var job: Job? = null
 
     /**
      * Non-blocking function called by the UI (Fragment) when the
@@ -33,11 +36,16 @@ class MainViewModel : ViewModel() {
      * Fragment.
      */
     fun onSendButtonClicked() {
+        // Ignore button click if a request is still active.
+        if (job?.isActive == true) {
+            return
+        }
+
         // Immediately post a busy string to the LiveData feed.
         _liveData.postValue("Performing GET request ...")
 
         // Launch a new coroutine to run network request in the background.
-        viewModelScope.launch {
+        job = viewModelScope.launch {
             try {
                 // 1. Run the suspending network request.
                 val rawJson = makeNetworkCall(URL)
