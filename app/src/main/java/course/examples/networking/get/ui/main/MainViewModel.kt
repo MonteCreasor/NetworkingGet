@@ -44,11 +44,11 @@ class MainViewModel : ViewModel() {
         // Immediately post a busy string to the LiveData feed.
         _liveData.postValue("Performing GET request ...")
 
-        // Launch a new coroutine to run network request in the background.
-        job = viewModelScope.launch {
+        // Launch a new coroutine on to run the network on the IO thread.
+        job = viewModelScope.launch(Dispatchers.IO) {
             try {
-                // 1. Run the suspending network request.
-                val rawJson = makeNetworkCall(URL)
+                // 1. Use a Ktor HttpClient to perform the get request.
+                val rawJson = HttpClient().get<String>(URL)
 
                 // 2. Post the returned JSON string to the LiveData feed.
                 _liveData.postValue(rawJson.prettyPrint())
@@ -67,22 +67,9 @@ class MainViewModel : ViewModel() {
         gson.toJson(JsonParser.parseString(this))
 
     /**
-     * Suspending helper function that performs the network request
-     * specified by the passed [url] and returns the raw JSON result.
-     */
-    private suspend fun makeNetworkCall(url: String): String =
-        withContext(Dispatchers.IO) {
-            // Construct a new Ktor HttpClient to perform the get
-            // request and then return the JSON result.
-            HttpClient().get(url)
-        }
-
-    /**
      * Constants
      */
     companion object {
-        private const val TAG = "HttpGetTask"
-
         // Get your own user name at http://www.geonames.org/login
         private const val USER_NAME = "aporter"
 
